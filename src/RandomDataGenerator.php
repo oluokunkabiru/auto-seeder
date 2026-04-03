@@ -64,9 +64,12 @@ class RandomDataGenerator
     public function generate(array $column)
     {
         // If the column is nullable AND has absolutely no SQL default value,
-        // leave it as null natively as requested by the user.
+        // leave it as null natively as requested by the user,
+        // UNLESS it's a standard framework timestamp which we always want seeded.
         if ($column['nullable'] && ($column['default'] ?? null) === null) {
-            return null;
+            if (!in_array(strtolower($column['name']), ['created_at', 'updated_at'])) {
+                return null;
+            }
         }
 
         // Return null for nullable columns that DO have a default ~5% of the time
@@ -82,8 +85,7 @@ class RandomDataGenerator
         // Strict Type Guards: Do not apply string name-heuristics to
         // numeric or date columns to avoid SQL insertion crashes.
         // ---------------------------------------------------------------
-        $dateTypes = ['date', 'datetime', 'timestamp', 'time', 'year'];
-        if (in_array($type, $dateTypes, true)) {
+        if (str_contains($type, 'time') || str_contains($type, 'date') || $type === 'year') {
             return $this->generateByType($type, $column);
         }
 
