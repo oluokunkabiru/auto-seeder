@@ -20,6 +20,7 @@ class ComposerStaticInit42758a4bd82f14b5e75879972be95fd0
         ),
         'O' =>
         array (
+            'Oluokunkabiru\\AutoSeeder\\Tests\\' => 31,
             'Oluokunkabiru\\AutoSeeder\\' => 25,
         ),
         'F' =>
@@ -40,6 +41,10 @@ class ComposerStaticInit42758a4bd82f14b5e75879972be95fd0
         'PhpParser\\' =>
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
+        ),
+        'Oluokunkabiru\\AutoSeeder\\Tests\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/tests',
         ),
         'Oluokunkabiru\\AutoSeeder\\' =>
         array (

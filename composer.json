@@ -1,19 +1,19 @@
 {
     "name": "oluokunkabiru/auto-seeder",
-    "description": "Seeding data to existing database based on the current database structure and follow database datatype",
+    "description": "Framework-agnostic PHP package that auto-seeds database tables by introspecting model schemas and generating realistic random data via Faker.",
+    "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Oluokunkabiru\\AutoSeeder\\": "src/"
-        }
-    },
+    "keywords": ["laravel", "seeder", "database", "faker", "auto-seed", "testing"],
+    "homepage": "https://github.com/oluokunkabiru/auto-seeder",
     "authors": [
         {
             "name": "OLUOKUN KABIRU ADESINA",
-            "email": "oluokunkabiru2015@gmail.com"
+            "email": "oluokunkabiru2015@gmail.com",
+            "role": "Developer"
         }
     ],
     "minimum-stability": "stable",
+    "prefer-stable": true,
     "require": {
         "php": ">=8.0",
         "fakerphp/faker": "^1.23"
@@ -21,11 +21,24 @@
     "require-dev": {
         "phpunit/phpunit": "^10.0"
     },
+    "autoload": {
+        "psr-4": {
+            "Oluokunkabiru\\AutoSeeder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Oluokunkabiru\\AutoSeeder\\Tests\\": "tests/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [
                 "Oluokunkabiru\\AutoSeeder\\AutoSeederServiceProvider"
             ]
         }
+    },
+    "config": {
+        "sort-packages": true
     }
 }
