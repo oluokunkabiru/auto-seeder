@@ -73,8 +73,27 @@ class RandomDataGenerator
         $length = $column['length'] ?? null;
 
         // ---------------------------------------------------------------
-        // Name-based heuristics (applied first for better realism)
-        // Strings are trimmed to column length where applicable.
+        // Strict Type Guards: Do not apply string name-heuristics to
+        // numeric or date columns to avoid SQL insertion crashes.
+        // ---------------------------------------------------------------
+        $dateTypes = ['date', 'datetime', 'timestamp', 'time', 'year'];
+        if (in_array($type, $dateTypes, true)) {
+            return $this->generateByType($type, $column);
+        }
+
+        $numericTypes = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'decimal', 'numeric', 'float', 'double'];
+        if (in_array($type, $numericTypes, true)) {
+            if ($this->nameMatches($name, ['amount', 'price', 'cost', 'salary', 'fee', 'balance', 'total'])) {
+                return $this->faker->randomFloat(2, 0, 100000);
+            }
+            if ($this->nameMatches($name, ['age'])) {
+                return $this->faker->numberBetween(1, 100);
+            }
+            return $this->generateByType($type, $column);
+        }
+
+        // ---------------------------------------------------------------
+        // Name-based heuristics for string-like columns
         // ---------------------------------------------------------------
         if ($this->nameMatches($name, ['email'])) {
             $opts   = $this->optionsFor($name);
