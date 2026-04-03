@@ -1,9 +1,9 @@
 {
     "name": "oluokunkabiru/auto-seeder",
-    "description": "Framework-agnostic PHP package that auto-seeds database tables by introspecting model schemas and generating realistic random data via Faker.",
+    "description": "Intelligent automated PHP database seeder for Laravel that introspects schema architectures to instantly populate precise Fake data natively adhering to Types, ENUM fields, and Foreign Key Constraints.",
+    "keywords": ["laravel", "php", "seeder", "faker", "testing", "database-seeder", "auto-seeder", "livewire", "mock-data", "schema-introspection", "foreign-key-resolution", "dummy-data"],
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "seeder", "database", "faker", "auto-seed", "testing"],
     "homepage": "https://github.com/oluokunkabiru/auto-seeder",
     "authors": [
         {
