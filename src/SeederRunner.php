@@ -43,18 +43,56 @@ class SeederRunner
             throw new RuntimeException("No seedable columns found for table: {$table}");
         }
 
-        $inserted = 0;
+        $fkCache = [];
 
         for ($i = 0; $i < $count; $i++) {
             $row = [];
             foreach ($columns as $column) {
-                $row[$column['name']] = $this->generator->generate($column);
+                // Determine if this is a foreign key tracking _id
+                $colName = $column['name'];
+                if (str_ends_with(strtolower($colName), '_id')) {
+                    $relatedTable = $this->guessRelatedTable($colName);
+                    
+                    if (!isset($fkCache[$relatedTable])) {
+                        try {
+                            $stmt = $this->pdo->query("SELECT id FROM `{$relatedTable}`");
+                            $fkCache[$relatedTable] = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+                        } catch (\Throwable $e) {
+                            $fkCache[$relatedTable] = [];
+                        }
+                    }
+                    
+                    if (!empty($fkCache[$relatedTable])) {
+                        $row[$colName] = $fkCache[$relatedTable][array_rand($fkCache[$relatedTable])];
+                        continue;
+                    }
+                    // Fallthrough to standard generation if table is missing or empty
+                }
+
+                $row[$colName] = $this->generator->generate($column);
             }
             $this->insertRow($table, $row);
             $inserted++;
         }
 
         return $inserted;
+    }
+
+    /**
+     * Guess the related table name for a foreign key column.
+     * e.g. user_id -> users, company_id -> companies
+     */
+    private function guessRelatedTable(string $columnName): string
+    {
+        $base = str_replace('_id', '', strtolower($columnName));
+        if (class_exists(\Illuminate\Support\Str::class)) {
+            return \Illuminate\Support\Str::plural($base);
+        }
+        
+        if (str_ends_with($base, 'y')) {
+            return substr($base, 0, -1) . 'ies';
+        }
+        return $base . 's';
     }
 
     /**

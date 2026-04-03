@@ -53,8 +53,9 @@ class ColumnInspector
 
     private function parseMysqlRow(array $row): array
     {
-        $rawType = strtolower($row['Type']);  // e.g. "varchar(255)", "decimal(10,2)", "tinyint(1)"
-        $type    = preg_replace('/\(.*\)/', '', $rawType); // strip -> "varchar", "decimal"
+        $rawType = strtolower($row['Type']);
+        $type    = preg_replace('/\(.*\)/', '', $rawType);
+        $type    = trim(str_replace('unsigned', '', $type));
 
         // Extract length (single value in parentheses)
         $length    = null;
