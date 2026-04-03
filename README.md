@@ -13,7 +13,55 @@ A zero-config PHP package that connects to your database via an Eloquent model (
 composer require oluokunkabiru/auto-seeder
 ```
 
-## Configuration (Laravel)
+## Artisan Command
+
+After installation the `seed:auto` command is automatically available:
+
+```bash
+# Seed 1 row (default)
+php artisan seed:auto User
+
+# Seed N rows
+php artisan seed:auto User 50
+
+# Full FQCN
+php artisan seed:auto "App\Models\Order" 100
+
+# Override email domain and phone country code at runtime
+php artisan seed:auto User 50 --domain=acme.com --country-code=+234
+
+# Skip specific columns
+php artisan seed:auto User 50 --skip=api_token,stripe_id
+
+# Use a different Faker locale
+php artisan seed:auto User 50 --locale=fr_FR
+```
+
+## Web Dashboard
+
+A self-contained browser UI is registered at `http://your-app.test/auto-seeder`.
+
+**Features:**
+- 🃏 **Model cards** — auto-discovered from `app/Models`, each with a row count input (default 1) and a **Seed** button
+- ⚙️ **Settings tab** — configure locale, default count, email domain, phone country code — saved to `.env`
+- 🌙 **Dark / Light mode** toggle (persisted in `localStorage`)
+- ✅ **Toast notifications** on success or error
+
+**Publish the views** to customise the dashboard:
+```bash
+php artisan vendor:publish --tag=auto-seeder-views
+```
+
+**Disable the dashboard** (e.g. in production):
+```env
+AUTO_SEEDER_DASHBOARD=false
+```
+
+**Restrict to authenticated users:**
+```php
+// config/auto-seeder.php
+'route_middleware' => ['web', 'auth'],
+```
 
 The ServiceProvider is automatically registered via package auto-discovery.
 

@@ -3,6 +3,7 @@
 namespace Oluokunkabiru\AutoSeeder;
 
 use Illuminate\Support\ServiceProvider;
+use Oluokunkabiru\AutoSeeder\Commands\SeedAutoCommand;
 
 class AutoSeederServiceProvider extends ServiceProvider
 {
@@ -11,11 +12,28 @@ class AutoSeederServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Make the config publishable:
-        // php artisan vendor:publish --tag=auto-seeder-config
+        // ── Config ───────────────────────────────────────────
         $this->publishes([
             __DIR__ . '/../config/auto-seeder.php' => config_path('auto-seeder.php'),
         ], 'auto-seeder-config');
+
+        // ── Views ─────────────────────────────────────────────
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'auto-seeder');
+        $this->publishes([
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/auto-seeder'),
+        ], 'auto-seeder-views');
+
+        // ── Routes ────────────────────────────────────────────
+        if (config('auto-seeder.dashboard_enabled', true)) {
+            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        }
+
+        // ── Artisan Commands ──────────────────────────────────
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SeedAutoCommand::class,
+            ]);
+        }
     }
 
     /**
@@ -23,7 +41,7 @@ class AutoSeederServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Merge package defaults — works even before the user publishes the config
+        // Merge package defaults so config() works even if user hasn't published
         $this->mergeConfigFrom(
             __DIR__ . '/../config/auto-seeder.php',
             'auto-seeder'

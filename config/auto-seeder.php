@@ -93,4 +93,37 @@ return [
     */
     'types' => [],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Web Dashboard
+    |--------------------------------------------------------------------------
+    | Enable or disable the built-in web dashboard.
+    |
+    |   URL:  /{route_prefix}          → Model seeder cards
+    |   URL:  /{route_prefix}/settings → Settings panel
+    */
+    'dashboard_enabled' => env('AUTO_SEEDER_DASHBOARD', true),
+
+    /*
+    | Route prefix for the dashboard (default: "auto-seeder")
+    | Access at: http://your-app.test/auto-seeder
+    */
+    'route_prefix' => env('AUTO_SEEDER_ROUTE_PREFIX', 'auto-seeder'),
+
+    /*
+    | Middleware applied to dashboard routes.
+    | Add 'auth' here to restrict access to logged-in users.
+    */
+    'route_middleware' => ['web'],
+
+    /*
+    | Directory to scan for Eloquent models.
+    */
+    'models_path' => env('AUTO_SEEDER_MODELS_PATH', ''),   // empty = app_path('Models') at runtime
+
+    /*
+    | Base namespace for the models directory.
+    */
+    'models_namespace' => env('AUTO_SEEDER_MODELS_NAMESPACE', 'App\\Models'),
+
 ];
