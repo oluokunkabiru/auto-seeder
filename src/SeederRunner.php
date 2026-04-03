@@ -43,6 +43,7 @@ class SeederRunner
             throw new RuntimeException("No seedable columns found for table: {$table}");
         }
 
+        $inserted = 0;
         $fkCache = [];
 
         for ($i = 0; $i < $count; $i++) {

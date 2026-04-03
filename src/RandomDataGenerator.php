@@ -83,8 +83,12 @@ class RandomDataGenerator
 
         // ---------------------------------------------------------------
         // Strict Type Guards: Do not apply string name-heuristics to
-        // numeric or date columns to avoid SQL insertion crashes.
+        // numeric, date, or strict string columns to avoid SQL insertion crashes.
         // ---------------------------------------------------------------
+        if (in_array($type, ['enum', 'set'], true)) {
+            return $this->generateByType($type, $column);
+        }
+
         if (str_contains($type, 'time') || str_contains($type, 'date') || $type === 'year') {
             return $this->generateByType($type, $column);
         }
