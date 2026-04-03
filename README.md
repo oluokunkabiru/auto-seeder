@@ -84,8 +84,10 @@ return [
 
     // Per-column format options (exact or partial name match)
     'columns' => [
-        'email'  => ['domain'       => env('AUTO_SEEDER_EMAIL_DOMAIN', null)],   // e.g. 'acme.com'
-        'phone'  => ['country_code' => env('AUTO_SEEDER_PHONE_COUNTRY_CODE', null)], // e.g. '+234'
+        'email'  => ['domain'       => env('AUTO_SEEDER_EMAIL_DOMAIN', null)],   // e.g. 'koadit.com'
+        'phone'  => ['country_code' => env('AUTO_SEEDER_PHONE_COUNTRY_CODE', null)], 
+        // e.g. '+234'
+        // 08130584550
         'mobile' => ['country_code' => env('AUTO_SEEDER_PHONE_COUNTRY_CODE', null)],
     ],
 
@@ -104,7 +106,7 @@ You can also use `.env` shortcuts without touching the config file:
 ```env
 AUTO_SEEDER_LOCALE=fr_FR
 AUTO_SEEDER_DEFAULT_COUNT=10
-AUTO_SEEDER_EMAIL_DOMAIN=acme.com
+AUTO_SEEDER_EMAIL_DOMAIN=koadit.com
 AUTO_SEEDER_PHONE_COUNTRY_CODE=+234
 ```
 
