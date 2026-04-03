@@ -63,7 +63,13 @@ class RandomDataGenerator
      */
     public function generate(array $column)
     {
-        // Return null for nullable columns ~5% of the time
+        // If the column is nullable AND has absolutely no SQL default value,
+        // leave it as null natively as requested by the user.
+        if ($column['nullable'] && ($column['default'] ?? null) === null) {
+            return null;
+        }
+
+        // Return null for nullable columns that DO have a default ~5% of the time
         if ($column['nullable'] && $this->faker->boolean(5)) {
             return null;
         }

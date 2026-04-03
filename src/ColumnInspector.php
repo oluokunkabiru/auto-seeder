@@ -86,6 +86,7 @@ class ColumnInspector
             'scale'     => $scale,
             'values'    => $values,
             'unsigned'  => str_contains($rawType, 'unsigned'),
+            'default'   => $row['Default'] ?? null,
             'key'       => strtolower($row['Key'] ?? ''),
             'extra'     => strtolower($row['Extra'] ?? ''),
         ];
@@ -125,6 +126,7 @@ class ColumnInspector
                 'scale'     => $scale,
                 'values'    => [],
                 'unsigned'  => false,
+                'default'   => $row['dflt_value'] ?? null,
                 'key'       => $row['pk'] ? 'pri' : '',
                 'extra'     => '',
             ];
@@ -142,6 +144,7 @@ class ColumnInspector
             SELECT
                 column_name,
                 data_type,
+                column_default,
                 is_nullable,
                 character_maximum_length,
                 numeric_precision,
@@ -166,6 +169,7 @@ class ColumnInspector
                 'scale'     => $row['numeric_scale'] ?? null,
                 'values'    => [],
                 'unsigned'  => false,
+                'default'   => $row['column_default'] ?? null,
                 'key'       => '',
                 'extra'     => '',
             ];
