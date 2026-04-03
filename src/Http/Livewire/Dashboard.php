@@ -41,8 +41,11 @@ class Dashboard extends Component
             // Get actual DB count
             try {
                 $fqcn = $model['fqcn'];
-                $classObj = new $fqcn();
-                $this->dbCounts[$fqcn] = method_exists($classObj, 'count') ? $classObj->count() : 0;
+                if (!empty($model['table']) && class_exists('\Illuminate\Support\Facades\DB')) {
+                    $this->dbCounts[$fqcn] = \Illuminate\Support\Facades\DB::table($model['table'])->count();
+                } else {
+                    $this->dbCounts[$fqcn] = $fqcn::count();
+                }
             } catch (\Throwable $e) {
                 $this->dbCounts[$model['fqcn']] = '?';
             }
