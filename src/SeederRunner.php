@@ -13,8 +13,7 @@ class SeederRunner
 
     /** Columns to always skip during seeding */
     private array $skipColumns = [
-        'id', 'created_at', 'updated_at', 'deleted_at',
-        'remember_token', 'email_verified_at',
+        'id', 'deleted_at',
     ];
 
     public function __construct(PDO $pdo, string $locale = 'en_US')

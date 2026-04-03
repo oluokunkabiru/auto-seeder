@@ -1,4 +1,4 @@
- ma<?php
+<?php
 
 namespace Oluokunkabiru\AutoSeeder;
 
@@ -63,8 +63,8 @@ class RandomDataGenerator
      */
     public function generate(array $column)
     {
-        // Return null for nullable columns ~20% of the time
-        if ($column['nullable'] && $this->faker->boolean(20)) {
+        // Return null for nullable columns ~5% of the time
+        if ($column['nullable'] && $this->faker->boolean(5)) {
             return null;
         }
 
