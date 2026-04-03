@@ -1,4 +1,4 @@
-<?php
+ ma<?php
 
 namespace Oluokunkabiru\AutoSeeder;
 
@@ -28,19 +28,11 @@ class RandomDataGenerator
     /**
      * Set per-column generation options.
      *
-     * Example:
-     *   $gen->setColumnOptions([
-     *       'email'          => ['domain' => 'acme.com'],
-     *       'phone'          => ['country_code' => '+234'],
-     *       'mobile_number'  => ['country_code' => '+44'],
-     *   ]);
-     *
      * @param  array<string, array<string, mixed>> $options
      * @return $this
      */
     public function setColumnOptions(array $options): static
     {
-        // Normalise keys to lowercase
         foreach ($options as $col => $cfg) {
             $this->columnOptions[strtolower($col)] = $cfg;
         }
@@ -49,106 +41,101 @@ class RandomDataGenerator
 
     /**
      * Retrieve the configured options for a specific column name.
-     * Falls back to empty array if none configured.
      */
     private function optionsFor(string $columnName): array
     {
-        // Exact match first
         if (isset($this->columnOptions[$columnName])) {
             return $this->columnOptions[$columnName];
         }
-
-        // Partial match: check if any configured key is a substring of the column name
         foreach ($this->columnOptions as $key => $cfg) {
             if (str_contains($columnName, $key)) {
                 return $cfg;
             }
         }
-
         return [];
     }
 
     /**
      * Generate a random value for a given column definition.
      *
-     * @param  array $column  { name, type, nullable, length, values, unsigned, key, extra }
+     * @param  array $column  { name, type, nullable, length, precision, scale, values, unsigned, key, extra }
      * @return mixed
      */
     public function generate(array $column)
     {
-        // Always return null for nullable columns ~20% of the time
+        // Return null for nullable columns ~20% of the time
         if ($column['nullable'] && $this->faker->boolean(20)) {
             return null;
         }
 
-        $name = strtolower($column['name']);
-        $type = strtolower($column['type']);
+        $name   = strtolower($column['name']);
+        $type   = strtolower($column['type']);
+        $length = $column['length'] ?? null;
 
         // ---------------------------------------------------------------
         // Name-based heuristics (applied first for better realism)
+        // Strings are trimmed to column length where applicable.
         // ---------------------------------------------------------------
         if ($this->nameMatches($name, ['email'])) {
             $opts   = $this->optionsFor($name);
             $domain = $opts['domain'] ?? null;
-            if ($domain) {
-                // Build a username@custom-domain address
-                $user = $this->faker->unique()->userName();
-                return "{$user}@{$domain}";
-            }
-            return $this->faker->unique()->safeEmail();
+            $email  = $domain
+                ? $this->faker->unique()->userName() . "@{$domain}"
+                : $this->faker->unique()->safeEmail();
+            return $this->truncate($email, $length);
         }
         if ($this->nameMatches($name, ['first_name', 'firstname'])) {
-            return $this->faker->firstName();
+            return $this->truncate($this->faker->firstName(), $length);
         }
         if ($this->nameMatches($name, ['last_name', 'lastname', 'surname'])) {
-            return $this->faker->lastName();
+            return $this->truncate($this->faker->lastName(), $length);
         }
         if ($this->nameMatches($name, ['name', 'full_name', 'fullname'])) {
-            return $this->faker->name();
+            return $this->truncate($this->faker->name(), $length);
         }
         if ($this->nameMatches($name, ['phone', 'telephone', 'mobile', 'phone_number'])) {
             $opts        = $this->optionsFor($name);
             $countryCode = $opts['country_code'] ?? null;
             $number      = $this->faker->phoneNumber();
             if ($countryCode) {
-                // Strip any leading 0 from local number and prepend country code
                 $localNumber = ltrim(preg_replace('/[^0-9]/', '', $number), '0');
-                return rtrim($countryCode, ' ') . $localNumber;
+                $number = rtrim($countryCode, ' ') . $localNumber;
             }
-            return $number;
+            return $this->truncate($number, $length);
         }
         if ($this->nameMatches($name, ['address', 'street'])) {
-            return $this->faker->streetAddress();
+            return $this->truncate($this->faker->streetAddress(), $length);
         }
         if ($this->nameMatches($name, ['city'])) {
-            return $this->faker->city();
+            return $this->truncate($this->faker->city(), $length);
         }
         if ($this->nameMatches($name, ['state', 'province'])) {
-            return $this->faker->state();
+            return $this->truncate($this->faker->state(), $length);
         }
         if ($this->nameMatches($name, ['country'])) {
-            return $this->faker->country();
+            return $this->truncate($this->faker->country(), $length);
         }
         if ($this->nameMatches($name, ['zipcode', 'zip_code', 'postal_code', 'postcode'])) {
-            return $this->faker->postcode();
+            return $this->truncate($this->faker->postcode(), $length);
         }
         if ($this->nameMatches($name, ['url', 'website', 'link'])) {
-            return $this->faker->url();
+            return $this->truncate($this->faker->url(), $length);
         }
         if ($this->nameMatches($name, ['username', 'user_name'])) {
-            return $this->faker->userName();
+            return $this->truncate($this->faker->userName(), $length);
         }
         if ($this->nameMatches($name, ['password'])) {
+            // bcrypt hash is always 60 chars
             return password_hash($this->faker->password(8, 16), PASSWORD_BCRYPT);
         }
         if ($this->nameMatches($name, ['title'])) {
-            return $this->faker->sentence(3);
+            return $this->truncate($this->faker->sentence(3), $length);
         }
         if ($this->nameMatches($name, ['description', 'body', 'content', 'bio', 'summary', 'note', 'notes', 'remark', 'remarks', 'comment', 'comments'])) {
             return $this->faker->paragraph();
         }
         if ($this->nameMatches($name, ['slug'])) {
-            return $this->faker->slug();
+            return $this->truncate($this->faker->slug(), $length);
         }
         if ($this->nameMatches($name, ['uuid'])) {
             return $this->faker->uuid();
@@ -163,7 +150,7 @@ class RandomDataGenerator
             return $this->faker->longitude();
         }
         if ($this->nameMatches($name, ['color', 'colour'])) {
-            return $this->faker->hexColor();
+            return $this->truncate($this->faker->hexColor(), $length);
         }
         if ($this->nameMatches($name, ['amount', 'price', 'cost', 'salary', 'fee', 'balance', 'total'])) {
             return $this->faker->randomFloat(2, 0, 100000);
@@ -172,13 +159,14 @@ class RandomDataGenerator
             return $this->faker->numberBetween(1, 100);
         }
         if ($this->nameMatches($name, ['gender', 'sex'])) {
-            return $this->faker->randomElement(['male', 'female']);
+            return $this->truncate($this->faker->randomElement(['male', 'female']), $length);
         }
         if ($this->nameMatches($name, ['image', 'photo', 'avatar', 'picture', 'thumbnail'])) {
-            return $this->faker->imageUrl(640, 480);
+            return $this->truncate($this->faker->imageUrl(640, 480), $length);
         }
         if ($this->nameMatches($name, ['token', 'api_key', 'secret'])) {
-            return bin2hex(random_bytes(32));
+            $hex = bin2hex(random_bytes(32));
+            return $length ? substr($hex, 0, $length) : $hex;
         }
         if ($this->nameMatches($name, ['status'])) {
             return $this->faker->randomElement(['active', 'inactive', 'pending']);
@@ -188,84 +176,149 @@ class RandomDataGenerator
         }
 
         // ---------------------------------------------------------------
-        // Type-based generation
+        // Type-based generation (range/length/precision aware)
         // ---------------------------------------------------------------
         return $this->generateByType($type, $column);
     }
 
     /**
-     * Generate data purely based on DB column type.
+     * Generate data purely based on DB column type, respecting constraints.
+     *
+     * Constraints respected:
+     *   - Integer: exact signed/unsigned min-max per MySQL type
+     *   - decimal/numeric: precision + scale from column definition
+     *   - char: exactly N characters
+     *   - varchar: at most N characters (realistic text, truncated)
      */
     private function generateByType(string $type, array $column)
     {
+        $length   = $column['length']    ?? null;
+        $unsigned = $column['unsigned']  ?? false;
+        $scale    = $column['scale']     ?? null;
+        $prec     = $column['precision'] ?? null;
+
         switch (true) {
 
-            // Boolean
-            case $type === 'tinyint' && ($column['length'] ?? 0) === 1:
+            // ── Boolean ────────────────────────────────────────────────
+            case $type === 'tinyint' && ($length ?? 0) === 1:
             case in_array($type, ['boolean', 'bool']):
                 return $this->faker->boolean();
 
-            // Integer types
-            case in_array($type, ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint', 'serial', 'int2', 'int4', 'int8']):
-                $max = $column['unsigned'] ? 99999 : 9999;
-                return $this->faker->numberBetween(0, $max);
+            // ── tinyint — SIGNED -128→127, UNSIGNED 0→255 ─────────────
+            case $type === 'tinyint':
+                return $unsigned
+                    ? $this->faker->numberBetween(0, 255)
+                    : $this->faker->numberBetween(-128, 127);
 
-            // Decimal / Float / Double
-            case in_array($type, ['decimal', 'numeric', 'float', 'double', 'real', 'money', 'double precision']):
-                return $this->faker->randomFloat(2, 0, 9999);
+            // ── smallint — SIGNED -32768→32767, UNSIGNED 0→65535 ──────
+            case in_array($type, ['smallint', 'int2']):
+                return $unsigned
+                    ? $this->faker->numberBetween(0, 65535)
+                    : $this->faker->numberBetween(-32768, 32767);
 
-            // Strings
-            case in_array($type, ['varchar', 'char', 'character varying', 'nvarchar', 'nchar']):
-                $maxLen = min($column['length'] ?? 255, 255);
-                return $this->faker->lexify(str_repeat('?', min($maxLen, 20)));
+            // ── mediumint — SIGNED -8388608→8388607, UNSIGNED 0→16777215
+            case $type === 'mediumint':
+                return $unsigned
+                    ? $this->faker->numberBetween(0, 16777215)
+                    : $this->faker->numberBetween(-8388608, 8388607);
 
-            // Long text
+            // ── int/integer — SIGNED ±2147483647, UNSIGNED 0→2147483647
+            case in_array($type, ['int', 'integer', 'int4', 'serial']):
+                return $unsigned
+                    ? $this->faker->numberBetween(0, 2147483647)
+                    : $this->faker->numberBetween(-2147483648, 2147483647);
+
+            // ── bigint — full PHP safe range ───────────────────────────
+            case in_array($type, ['bigint', 'int8', 'bigserial']):
+                return $unsigned
+                    ? $this->faker->numberBetween(0, PHP_INT_MAX)
+                    : $this->faker->numberBetween(PHP_INT_MIN, PHP_INT_MAX);
+
+            // ── decimal/numeric — uses precision + scale ───────────────
+            // e.g. decimal(10,2): max integer part = 10-2=8 digits → 99999999
+            case in_array($type, ['decimal', 'numeric']):
+                $s         = $scale ?? 2;
+                $p         = $prec  ?? 10;
+                $intDigits = max(1, $p - $s);
+                $max       = (int) (10 ** $intDigits) - 1;
+                return $this->faker->randomFloat($s, 0, $max);
+
+            // ── float/double — high precision, large range ─────────────
+            case in_array($type, ['float', 'double', 'real', 'money', 'double precision']):
+                return $this->faker->randomFloat(4, 0, 9999999);
+
+            // ── char(N) — generate EXACTLY N characters ────────────────
+            case in_array($type, ['char', 'nchar']):
+                $n = max(1, $length ?? 1);
+                return substr($this->faker->lexify(str_repeat('?', $n)), 0, $n);
+
+            // ── varchar(N) — realistic text truncated to N chars ───────
+            case in_array($type, ['varchar', 'character varying', 'nvarchar']):
+                $max  = $length ?? 255;
+                $text = $this->faker->text(max(10, $max));
+                return substr($text, 0, $max);
+
+            // ── text — unlimited, realistic paragraph ──────────────────
             case in_array($type, ['text', 'mediumtext', 'longtext', 'tinytext', 'clob']):
                 return $this->faker->paragraph();
 
-            // Date / Time
+            // ── date ───────────────────────────────────────────────────
             case $type === 'date':
                 return $this->faker->date('Y-m-d');
 
+            // ── datetime / timestamp ───────────────────────────────────
             case in_array($type, ['datetime', 'timestamp', 'timestamp without time zone', 'timestamp with time zone']):
                 return $this->faker->dateTime()->format('Y-m-d H:i:s');
 
+            // ── time ───────────────────────────────────────────────────
             case $type === 'time':
                 return $this->faker->time('H:i:s');
 
+            // ── year ───────────────────────────────────────────────────
             case $type === 'year':
                 return $this->faker->year();
 
-            // Enum / Set
+            // ── enum / set — random pick from extracted values ─────────
             case in_array($type, ['enum', 'set']):
-                if (!empty($column['values'])) {
-                    return $this->faker->randomElement($column['values']);
-                }
-                return $this->faker->word();
+                return !empty($column['values'])
+                    ? $this->faker->randomElement($column['values'])
+                    : $this->faker->word();
 
-            // JSON
+            // ── json / jsonb ───────────────────────────────────────────
             case in_array($type, ['json', 'jsonb']):
                 return json_encode([
                     'key'   => $this->faker->word(),
                     'value' => $this->faker->sentence(),
                 ]);
 
-            // Binary / Blob — generate a small random hex string
+            // ── binary / blob ──────────────────────────────────────────
             case in_array($type, ['blob', 'mediumblob', 'longblob', 'tinyblob', 'binary', 'varbinary', 'bytea']):
                 return bin2hex(random_bytes(8));
 
-            // UUID (PostgreSQL uuid type)
+            // ── uuid ───────────────────────────────────────────────────
             case $type === 'uuid':
                 return $this->faker->uuid();
 
-            // Fallback: return a word
+            // ── fallback ───────────────────────────────────────────────
             default:
-                return $this->faker->word();
+                $word = $this->faker->word();
+                return $length ? substr($word, 0, $length) : $word;
         }
     }
 
     /**
-     * Check if the column name is in the list or contains one of the keywords.
+     * Truncate a string to the column's max length (if defined).
+     */
+    private function truncate(?string $value, ?int $maxLength): ?string
+    {
+        if ($value === null || $maxLength === null || $maxLength <= 0) {
+            return $value;
+        }
+        return substr($value, 0, $maxLength);
+    }
+
+    /**
+     * Check if the column name equals or contains one of the keywords.
      */
     private function nameMatches(string $name, array $keywords): bool
     {
