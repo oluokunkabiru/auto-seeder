@@ -3,7 +3,9 @@
 namespace Oluokunkabiru\AutoSeeder;
 
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use Oluokunkabiru\AutoSeeder\Commands\SeedAutoCommand;
+use Oluokunkabiru\AutoSeeder\Http\Livewire\Dashboard;
 
 class AutoSeederServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,11 @@ class AutoSeederServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/auto-seeder'),
         ], 'auto-seeder-views');
+
+        // ── Livewire Component ────────────────────────────────
+        if (class_exists(Livewire::class)) {
+            Livewire::component('auto-seeder-dashboard', Dashboard::class);
+        }
 
         // ── Routes ────────────────────────────────────────────
         if (config('auto-seeder.dashboard_enabled', true)) {
