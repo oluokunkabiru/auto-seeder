@@ -68,14 +68,9 @@ class AutoSeeder
         $instance->applyConfig($config);
 
         // Shorthand: AutoSeeder::fromModel(User::class, 50)
+        // Only seed automatically if count is explicitly requested in the factory
         if ($count > 0) {
             return $instance->seed($count);
-        }
-
-        // Use config default_count when count not explicitly passed
-        $defaultCount = (int) ($config['default_count'] ?? 1);
-        if ($defaultCount > 1) {
-            return $instance->seed($defaultCount);
         }
 
         return $instance;
