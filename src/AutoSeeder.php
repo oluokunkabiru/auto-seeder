@@ -43,9 +43,13 @@ class AutoSeeder
      * Create from a raw PDO connection.
      * No table is pre-set; you must pass the table name to seed().
      */
-    public static function fromPdo(PDO $pdo, string $locale = 'en_US'): static
+    public static function fromPdo(PDO $pdo, string $locale = ''): static
     {
-        return new static(new SeederRunner($pdo, $locale));
+        $config = self::loadConfig();
+        $locale = $locale ?: ($config['locale'] ?? 'en_US');
+
+        $instance = new static(new SeederRunner($pdo, $locale));
+        return $instance->applyConfig($config);
     }
 
     /**
@@ -58,11 +62,20 @@ class AutoSeeder
     public static function fromModel($model, int $count = 0): static|int
     {
         [$pdo, $table] = self::resolveModel($model);
-        $instance = new static(new SeederRunner($pdo), $table);
+        $config   = self::loadConfig();
+        $locale   = $config['locale'] ?? 'en_US';
+        $instance = new static(new SeederRunner($pdo, $locale), $table);
+        $instance->applyConfig($config);
 
         // Shorthand: AutoSeeder::fromModel(User::class, 50)
         if ($count > 0) {
             return $instance->seed($count);
+        }
+
+        // Use config default_count when count not explicitly passed
+        $defaultCount = (int) ($config['default_count'] ?? 1);
+        if ($defaultCount > 1) {
+            return $instance->seed($defaultCount);
         }
 
         return $instance;
@@ -123,6 +136,62 @@ class AutoSeeder
     public function configure(array $options): static
     {
         $this->runner->setColumnOptions($options);
+        return $this;
+    }
+
+    // =========================================================================
+    // Config loading helpers
+    // =========================================================================
+
+    /**
+     * Load the auto-seeder config array.
+     * In a Laravel app this reads config('auto-seeder').
+     * Outside Laravel it loads the package default config directly.
+     *
+     * @return array<string, mixed>
+     */
+    private static function loadConfig(): array
+    {
+        // Laravel environment: use the config() helper
+        if (function_exists('config')) {
+            $cfg = config('auto-seeder');
+            if (is_array($cfg)) {
+                return $cfg;
+            }
+        }
+
+        // Standalone: load the default config file directly
+        $file = __DIR__ . '/../config/auto-seeder.php';
+        if (file_exists($file)) {
+            return (array) require $file;
+        }
+
+        return [];
+    }
+
+    /**
+     * Apply a config array to this instance (columns, skip, types).
+     *
+     * @return $this
+     */
+    private function applyConfig(array $config): static
+    {
+        // Per-column format options (domain, country_code)
+        $columns = $config['columns'] ?? [];
+        // Strip entries where all option values are null (not configured)
+        $activeColumns = array_filter($columns, fn($opts) =>
+            is_array($opts) && count(array_filter($opts, fn($v) => $v !== null)) > 0
+        );
+        if (!empty($activeColumns)) {
+            $this->runner->setColumnOptions($activeColumns);
+        }
+
+        // Extra skip columns defined in config
+        $skip = array_filter((array) ($config['skip'] ?? []));
+        if (!empty($skip)) {
+            $this->runner->skipColumns($skip);
+        }
+
         return $this;
     }
 

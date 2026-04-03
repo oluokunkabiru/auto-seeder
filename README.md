@@ -4,13 +4,60 @@ A zero-config PHP package that connects to your database via an Eloquent model (
 
 ## Requirements
 
-- PHP >= 7.4
+- PHP >= 8.0
 - fakerphp/faker ^1.23
 
 ## Installation
 
 ```bash
 composer require oluokunkabiru/auto-seeder
+```
+
+## Configuration (Laravel)
+
+The ServiceProvider is automatically registered via package auto-discovery.
+
+Publish the config file to customise generation defaults:
+
+```bash
+php artisan vendor:publish --tag=auto-seeder-config
+```
+
+This creates `config/auto-seeder.php` in your Laravel project:
+
+```php
+return [
+
+    // Faker locale (see https://fakerphp.org/locales/)
+    'locale' => env('AUTO_SEEDER_LOCALE', 'en_US'),
+
+    // Default row count when seed() is called with no argument
+    'default_count' => env('AUTO_SEEDER_DEFAULT_COUNT', 1),
+
+    // Per-column format options (exact or partial name match)
+    'columns' => [
+        'email'  => ['domain'       => env('AUTO_SEEDER_EMAIL_DOMAIN', null)],   // e.g. 'acme.com'
+        'phone'  => ['country_code' => env('AUTO_SEEDER_PHONE_COUNTRY_CODE', null)], // e.g. '+234'
+        'mobile' => ['country_code' => env('AUTO_SEEDER_PHONE_COUNTRY_CODE', null)],
+    ],
+
+    // Extra columns to always skip (on top of id, timestamps, etc.)
+    'skip' => [
+        // 'two_factor_secret',
+    ],
+
+    // Override how specific DB types are treated (future use)
+    'types' => [],
+];
+```
+
+You can also use `.env` shortcuts without touching the config file:
+
+```env
+AUTO_SEEDER_LOCALE=fr_FR
+AUTO_SEEDER_DEFAULT_COUNT=10
+AUTO_SEEDER_EMAIL_DOMAIN=acme.com
+AUTO_SEEDER_PHONE_COUNTRY_CODE=+234
 ```
 
 ## Usage
@@ -34,6 +81,23 @@ AutoSeeder::fromModel(User::class, 50);
 AutoSeeder::fromModel(User::class)
     ->skip(['api_token', 'two_factor_secret'])
     ->seed(100);
+
+// Custom email domain + phone country code
+AutoSeeder::fromModel(User::class)
+    ->configure([
+        'email' => ['domain' => 'acme.com'],    // → someone@acme.com
+        'phone' => ['country_code' => '+234'],   // → +234XXXXXXXXXX
+    ])
+    ->seed(50);
+
+// Multiple phone columns with different country codes
+AutoSeeder::fromModel(User::class)
+    ->configure([
+        'email'         => ['domain' => 'company.io'],
+        'phone'         => ['country_code' => '+1'],
+        'mobile_number' => ['country_code' => '+44'],
+    ])
+    ->seed(20);
 ```
 
 Inside `DatabaseSeeder.php`:
