@@ -33,13 +33,14 @@ class Dashboard extends Component
         $namespace = !empty($config['models_namespace']) ? $config['models_namespace'] : 'App\\Models';
 
         $this->models = ModelDiscovery::discover($modelsDir, $namespace);
-        
+        $defaultCount = (int) config('auto-seeder.default_count', 1);
+
         foreach ($this->models as $model) {
-            $this->counts[$model['fqcn']] = 1;
+            $this->counts[$model['fqcn']] = $defaultCount;
         }
 
         $this->settings['locale'] = config('auto-seeder.locale', 'en_US');
-        $this->settings['default_count'] = config('auto-seeder.default_count', 1);
+        $this->settings['default_count'] = $defaultCount;
         $this->settings['email_domain'] = config('auto-seeder.columns.email.domain', '');
         $this->settings['phone_country_code'] = config('auto-seeder.columns.phone.country_code', '');
     }

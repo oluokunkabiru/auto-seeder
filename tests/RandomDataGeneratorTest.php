@@ -43,7 +43,7 @@ class RandomDataGeneratorTest extends TestCase
     {
         for ($i = 0; $i < 20; $i++) {
             $value = $this->gen->generate($this->col('is_active', 'tinyint', false, 1));
-            $this->assertContains($value, [true, false]);
+            $this->assertContains($value, [1, 0]);
         }
     }
 

@@ -221,7 +221,7 @@ class RandomDataGenerator
             // ── Boolean ────────────────────────────────────────────────
             case $type === 'tinyint' && ($length ?? 0) === 1:
             case in_array($type, ['boolean', 'bool']):
-                return $this->faker->boolean();
+                return $this->faker->boolean() ? 1 : 0;
 
             // ── tinyint — SIGNED -128→127, UNSIGNED 0→255 ─────────────
             case $type === 'tinyint':
