@@ -88,8 +88,9 @@ class RandomDataGeneratorTest extends TestCase
     {
         $enumValues = ['draft', 'published', 'archived'];
         for ($i = 0; $i < 20; $i++) {
-            $value = $this->gen->generate($this->col('status', 'enum', false, null, $enumValues));
-            $this->assertContains($value, $enumValues);
+            // Use a neutral column name so no name-heuristic interferes
+            $value = $this->gen->generate($this->col('publication', 'enum', false, null, $enumValues));
+            $this->assertContains($value, $enumValues, "Value '{$value}' is not in the enum list.");
         }
     }
 
