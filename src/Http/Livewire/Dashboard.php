@@ -13,6 +13,7 @@ class Dashboard extends Component
 {
     public array $models = [];
     public array $counts = [];
+    public array $dbCounts = [];
     
     public string $activeTab = 'models';
     public array $settings = [
