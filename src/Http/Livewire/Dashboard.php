@@ -29,8 +29,8 @@ class Dashboard extends Component
         }
 
         $config  = config('auto-seeder', []);
-        $modelsDir = $config['models_path'] ?? app_path('Models');
-        $namespace = $config['models_namespace'] ?? 'App\\Models';
+        $modelsDir = !empty($config['models_path']) ? $config['models_path'] : app_path('Models');
+        $namespace = !empty($config['models_namespace']) ? $config['models_namespace'] : 'App\\Models';
 
         $this->models = ModelDiscovery::discover($modelsDir, $namespace);
         
