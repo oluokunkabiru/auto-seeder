@@ -31,10 +31,13 @@ class ModelDiscovery
             }
 
             // Build the FQCN from the relative path
-            $relative = ltrim(
-                str_replace([$directory, '/'], ['', '\\'], $file->getPathname()),
-                '\\'
-            );
+            $basePath = realpath($directory);
+            $filePath = realpath($file->getPathname());
+            
+            $relative = str_replace($basePath, '', $filePath);
+            $relative = str_replace(['/', '\\'], '\\', $relative);
+            $relative = ltrim($relative, '\\');
+            
             $fqcn = rtrim($namespace, '\\') . '\\' . str_replace('.php', '', $relative);
 
             if (!class_exists($fqcn)) {
