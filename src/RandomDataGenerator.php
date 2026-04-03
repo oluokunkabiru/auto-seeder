@@ -9,9 +9,63 @@ class RandomDataGenerator
 {
     private Generator $faker;
 
+    /**
+     * Per-column format overrides.
+     * Key: column name (exact or partial match, lowercase).
+     * Value: array of options, e.g.:
+     *   ['domain' => 'example.com']       — for email columns
+     *   ['country_code' => '+234']         — for phone columns
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private array $columnOptions = [];
+
     public function __construct(string $locale = 'en_US')
     {
         $this->faker = Factory::create($locale);
+    }
+
+    /**
+     * Set per-column generation options.
+     *
+     * Example:
+     *   $gen->setColumnOptions([
+     *       'email'          => ['domain' => 'acme.com'],
+     *       'phone'          => ['country_code' => '+234'],
+     *       'mobile_number'  => ['country_code' => '+44'],
+     *   ]);
+     *
+     * @param  array<string, array<string, mixed>> $options
+     * @return $this
+     */
+    public function setColumnOptions(array $options): static
+    {
+        // Normalise keys to lowercase
+        foreach ($options as $col => $cfg) {
+            $this->columnOptions[strtolower($col)] = $cfg;
+        }
+        return $this;
+    }
+
+    /**
+     * Retrieve the configured options for a specific column name.
+     * Falls back to empty array if none configured.
+     */
+    private function optionsFor(string $columnName): array
+    {
+        // Exact match first
+        if (isset($this->columnOptions[$columnName])) {
+            return $this->columnOptions[$columnName];
+        }
+
+        // Partial match: check if any configured key is a substring of the column name
+        foreach ($this->columnOptions as $key => $cfg) {
+            if (str_contains($columnName, $key)) {
+                return $cfg;
+            }
+        }
+
+        return [];
     }
 
     /**
@@ -34,6 +88,13 @@ class RandomDataGenerator
         // Name-based heuristics (applied first for better realism)
         // ---------------------------------------------------------------
         if ($this->nameMatches($name, ['email'])) {
+            $opts   = $this->optionsFor($name);
+            $domain = $opts['domain'] ?? null;
+            if ($domain) {
+                // Build a username@custom-domain address
+                $user = $this->faker->unique()->userName();
+                return "{$user}@{$domain}";
+            }
             return $this->faker->unique()->safeEmail();
         }
         if ($this->nameMatches($name, ['first_name', 'firstname'])) {
@@ -46,7 +107,15 @@ class RandomDataGenerator
             return $this->faker->name();
         }
         if ($this->nameMatches($name, ['phone', 'telephone', 'mobile', 'phone_number'])) {
-            return $this->faker->phoneNumber();
+            $opts        = $this->optionsFor($name);
+            $countryCode = $opts['country_code'] ?? null;
+            $number      = $this->faker->phoneNumber();
+            if ($countryCode) {
+                // Strip any leading 0 from local number and prepend country code
+                $localNumber = ltrim(preg_replace('/[^0-9]/', '', $number), '0');
+                return rtrim($countryCode, ' ') . $localNumber;
+            }
+            return $number;
         }
         if ($this->nameMatches($name, ['address', 'street'])) {
             return $this->faker->streetAddress();

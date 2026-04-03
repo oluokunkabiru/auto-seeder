@@ -149,4 +149,39 @@ class RandomDataGeneratorTest extends TestCase
         $this->assertNotEmpty($value);
         $this->assertMatchesRegularExpression('/^[a-z0-9\-]+$/', $value);
     }
+
+    // -------------------------------------------------------------------------
+    // configure() — column format options
+    // -------------------------------------------------------------------------
+
+    /** @test */
+    public function it_uses_custom_domain_for_email_column(): void
+    {
+        $this->gen->setColumnOptions(['email' => ['domain' => 'acme.com']]);
+        for ($i = 0; $i < 10; $i++) {
+            $value = $this->gen->generate($this->col('email', 'varchar', false, 150));
+            $this->assertStringEndsWith('@acme.com', $value, "Email should end with @acme.com, got: {$value}");
+        }
+    }
+
+    /** @test */
+    public function it_prepends_country_code_for_phone_column(): void
+    {
+        $this->gen->setColumnOptions(['phone' => ['country_code' => '+234']]);
+        for ($i = 0; $i < 10; $i++) {
+            $value = $this->gen->generate($this->col('phone', 'varchar', false, 20));
+            $this->assertStringStartsWith('+234', $value, "Phone should start with +234, got: {$value}");
+        }
+    }
+
+    /** @test */
+    public function it_uses_partial_column_name_match_for_options(): void
+    {
+        // 'mobile_number' contains 'mobile' which matches the phone heuristic
+        $this->gen->setColumnOptions(['mobile' => ['country_code' => '+44']]);
+        for ($i = 0; $i < 10; $i++) {
+            $value = $this->gen->generate($this->col('mobile_number', 'varchar', false, 20));
+            $this->assertStringStartsWith('+44', $value, "Phone should start with +44, got: {$value}");
+        }
+    }
 }

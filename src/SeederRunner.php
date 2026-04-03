@@ -106,4 +106,16 @@ class SeederRunner
         );
         return $this;
     }
+
+    /**
+     * Set per-column format options (forwarded to RandomDataGenerator).
+     *
+     * @param  array<string, array<string, mixed>> $options
+     * @return $this
+     */
+    public function setColumnOptions(array $options): static
+    {
+        $this->generator->setColumnOptions($options);
+        return $this;
+    }
 }

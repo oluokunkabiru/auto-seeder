@@ -15,6 +15,14 @@ use RuntimeException;
  *   AutoSeeder::fromModel(User::class)->seed(50);
  *   AutoSeeder::fromModel(new User())->seed();       // 1 row (default)
  *   AutoSeeder::fromModel('App\Models\User', 50);    // shorthand
+ *
+ * Format options:
+ *   AutoSeeder::fromModel(User::class)
+ *       ->configure([
+ *           'email' => ['domain' => 'acme.com'],      // email@acme.com
+ *           'phone' => ['country_code' => '+234'],    // +234XXXXXXXXXX
+ *       ])
+ *       ->seed(50);
  */
 class AutoSeeder
 {
@@ -90,6 +98,31 @@ class AutoSeeder
     public function skip(array $columns): static
     {
         $this->runner->skipColumns($columns);
+        return $this;
+    }
+
+    /**
+     * Set per-column format options.
+     *
+     * Supported options per column:
+     *   'email' column  → ['domain' => 'example.com']
+     *   'phone' column  → ['country_code' => '+234']
+     *
+     * The key is matched against column names by exact or partial match.
+     * You may configure multiple columns at once:
+     *
+     *   ->configure([
+     *       'email'         => ['domain' => 'acme.com'],
+     *       'phone'         => ['country_code' => '+234'],
+     *       'mobile_number' => ['country_code' => '+44'],
+     *   ])
+     *
+     * @param  array<string, array<string, mixed>> $options
+     * @return $this
+     */
+    public function configure(array $options): static
+    {
+        $this->runner->setColumnOptions($options);
         return $this;
     }
 
