@@ -52,7 +52,7 @@ class SeederRunner
                 // Determine if this is a foreign key tracking _id
                 $colName = $column['name'];
                 if (str_ends_with(strtolower($colName), '_id')) {
-                    $relatedTable = $this->guessRelatedTable($colName);
+                    $relatedTable = $this->resolveRelatedTable($table, $colName);
                     
                     if (!isset($fkCache[$relatedTable])) {
                         try {
@@ -77,6 +77,35 @@ class SeederRunner
         }
 
         return $inserted;
+    }
+
+    /**
+     * Natively query the Database schema to definitively discover what table this
+     * foreign key column references exactly (e.g artisan_id -> users), ensuring
+     * perfectly valid DB relations prior to falling back on string pluralizers.
+     */
+    private function resolveRelatedTable(string $table, string $columnName): string
+    {
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        try {
+            if ($driver === 'mysql') {
+                $stmt = $this->pdo->prepare("SELECT REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL LIMIT 1");
+                $stmt->execute([$table, $columnName]);
+                if ($res = $stmt->fetchColumn()) return $res;
+            } elseif ($driver === 'sqlite') {
+                $stmt = $this->pdo->prepare("PRAGMA foreign_key_list(`{$table}`)");
+                $stmt->execute();
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                    if ($row['from'] === $columnName) return $row['table'];
+                }
+            } elseif ($driver === 'pgsql') {
+                $stmt = $this->pdo->prepare("SELECT ccu.table_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name = ? AND kcu.column_name = ? LIMIT 1");
+                $stmt->execute([$table, $columnName]);
+                if ($res = $stmt->fetchColumn()) return $res;
+            }
+        } catch (\Throwable $e) {}
+
+        return $this->guessRelatedTable($columnName);
     }
 
     /**

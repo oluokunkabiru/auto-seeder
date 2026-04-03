@@ -49,7 +49,12 @@
                             </div>
                             <div>
                                 <h3 class="font-semibold text-slate-900 dark:text-white">{{ $model['name'] }}</h3>
-                                <p class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{ $model['table'] ?? '—' }}</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                                    {{ $model['table'] ?? '—' }}
+                                    <span class="ml-1.5 px-1.5 py-0.5 rounded shadow-sm bg-slate-200 dark:bg-slate-700 text-[10px] text-slate-600 dark:text-slate-300 font-sans font-medium whitespace-nowrap">
+                                        {{ $dbCounts[$model['fqcn']] ?? 0 }} rows in DB
+                                    </span>
+                                </p>
                             </div>
                         </div>
 

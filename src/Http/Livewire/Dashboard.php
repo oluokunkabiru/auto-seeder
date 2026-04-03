@@ -37,6 +37,14 @@ class Dashboard extends Component
 
         foreach ($this->models as $model) {
             $this->counts[$model['fqcn']] = $defaultCount;
+            // Get actual DB count
+            try {
+                $fqcn = $model['fqcn'];
+                $classObj = new $fqcn();
+                $this->dbCounts[$fqcn] = method_exists($classObj, 'count') ? $classObj->count() : 0;
+            } catch (\Throwable $e) {
+                $this->dbCounts[$model['fqcn']] = '?';
+            }
         }
 
         $this->settings['locale'] = config('auto-seeder.locale', 'en_US');
